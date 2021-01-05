@@ -1,0 +1,46 @@
+jobs:
+- job:
+  strategy:
+    matrix:
+      Eclipse 3.8:
+        ECLIPSE_VERSION: 3.8
+      Eclipse 4.6:
+        ECLIPSE_VERSION: 4.6
+      Eclipse 4.7:
+        ECLIPSE_VERSION: 4.7
+      Eclipse 4.8:
+        ECLIPSE_VERSION: 4.8
+      Eclipse 4.9:
+        ECLIPSE_VERSION: 4.9
+      Eclipse 4.10:
+        ECLIPSE_VERSION: 4.10
+      Eclipse 4.11:
+        ECLIPSE_VERSION: 4.11
+      Eclipse 4.12:
+        ECLIPSE_VERSION: 4.12
+      Eclipse 4.13:
+        ECLIPSE_VERSION: 4.13
+  pool:
+    vmImage: 'ubuntu-18.04'
+  steps:
+  - bash: |
+      set -e
+      sudo apt-get update
+      sudo apt-get install metacity
+      export DISPLAY=:99.0
+      Xvfb :99 &
+      sleep 5
+      metacity --sm-disable --replace 2> metacity.err &
+      if [[ "$BUILD_SOURCEBRANCH" == "refs/heads/azure-pipelines" && "$ECLIPSE_VERSION" == "3.8" ]]; then
+        mvn -V -B -e \
+          --settings=.azure-pipelines/maven-settings.xml \
+          -P e$ECLIPSE_VERSION -DskipUITests=false \
+          verify sonar:sonar
+      else
+        mvn -V -B -e \
+          -P e$ECLIPSE_VERSION -DskipUITests=false \
+          verify
+      fi
+    displayName: Build
+    env:
+      SONARQUBE_TOKEN: $(SONARQUBE_TOKEN)
